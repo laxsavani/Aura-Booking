@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   LIGHT MODE (default) - Zenith clean white aesthetic
+   ============================================================ */
+:root {
+  /* Brand Accent Colors (default = Aura Pink/Teal) */
+  --primary: #F472B6;
+  --primary-dark: #EC4899;
+  --primary-light: #FCE7F3;
+  --primary-xlight: #FDF2F8;
+  --teal: #67C4C0;
+  --teal-dark: #3FA8A4;
+  --teal-light: #E0F5F5;
+
+  /* Layout Surfaces - Light Mode */
+  --bg: #F5F6FA;
+  --card: #FFFFFF;
+  --sidebar-bg: #FFFFFF;
+  --topbar-bg: #FFFFFF;
+
+  /* Typography */
+  --text: #111827;
+  --text-secondary: #374151;
+  --muted: #6B7280;
+  --hint: #9CA3AF;
+
+  /* Borders & Dividers */
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+
+  /* Shadows */
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.10);
+  --shadow-btn: 0 4px 16px rgba(244, 114, 182, 0.35);
+  --shadow-sidebar: 1px 0 0 var(--border);
+}
+
+/* ============================================================
+   DARK MODE - Zenith near-black aesthetic
+   ============================================================ */
+.dark {
+  /* Layout Surfaces - Dark Mode */
+  --bg: #0D0D11;
+  --card: #17171F;
+  --sidebar-bg: #13131A;
+  --topbar-bg: #13131A;
+
+  /* Typography */
+  --text: #F3F4F6;
+  --text-secondary: #D1D5DB;
+  --muted: #9CA3AF;
+  --hint: #6B7280;
+
+  /* Borders & Dividers */
+  --border: #252533;
+  --border-light: #1E1E2A;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-hover: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-btn: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-sidebar: 1px 0 0 var(--border);
+}
+
+/* ============================================================
+   GLOBAL RESETS
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* ============================================================
+   LAYOUT DENSITY OVERRIDES
+   ============================================================ */
+body.density-compact { font-size: 0.92rem; }
+body.density-compact .admin-main { padding: 16px !important; }
+body.density-compact .card-padding { padding: 14px !important; }
+
+body.density-spacious { font-size: 1.04rem; }
+body.density-spacious .admin-main { padding: 40px !important; }
+body.density-spacious .card-padding { padding: 32px !important; }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, var(--border-light) 25%, var(--card) 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+.pulse-dot-pink {
+  animation: pulse-dot 2s infinite ease-in-out;
+  background-color: var(--primary);
+}
+
+.pulse-dot-teal {
+  animation: pulse-dot 2s infinite ease-in-out;
+  background-color: var(--teal);
+}
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-spin-slow { animation: spin-slow 8s infinite linear; }
+
+/* ============================================================
+   COMPONENT SURFACE UTILITIES (CSS variable powered)
+   Use these classes instead of hardcoded bg-white etc.
+   ============================================================ */
+.surface-page   { background-color: var(--bg); }
+.surface-card   { background-color: var(--card); }
+.surface-sidebar { background-color: var(--sidebar-bg); }
+.surface-topbar { background-color: var(--topbar-bg); }
+.surface-border { border-color: var(--border); }
+.text-surface   { color: var(--text); }
+.text-muted-surface { color: var(--muted); }
+.text-hint-surface  { color: var(--hint); }
+
+/* Force bg-white to use CSS variable so light/dark works without Tailwind dark: classes */
+.bg-white,
+[class*="bg-white"] {
+  background-color: var(--card) !important;
+}
+
+/* Override hardcoded page background */
+.bg-\[\#F8F5FF\],
+.bg-\[\#F5F6FA\] {
+  background-color: var(--bg) !important;
+}
+
+/* Dark-aware text overrides */
+.text-\[\#1A1A2E\],
+.text-\[\#111827\] {
+  color: var(--text) !important;
+}
+
+.text-\[\#374151\] {
+  color: var(--text-secondary) !important;
+}
+
+.text-\[\#6B6B8A\],
+.text-\[\#6B7280\],
+.text-brand-muted {
+  color: var(--muted) !important;
+}
+
+.text-\[\#A8A8C0\],
+.text-\[\#9CA3AF\],
+.text-brand-hint {
+  color: var(--hint) !important;
+}
+
+/* Dark-aware border overrides */
+.border-brand-border,
+.border-\[\#F9D0E8\],
+.border-\[\#E5E7EB\] {
+  border-color: var(--border) !important;
+}
+
+.border-\[\#F0F0F5\],
+.border-\[\#F3F4F6\] {
+  border-color: var(--border-light) !important;
+}
+
+.divide-\[\#F0F0F5\] > :not([hidden]) ~ :not([hidden]),
+.divide-\[\#E5E7EB\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border) !important;
+}
+
+/* Dark-aware shadow overrides */
+.shadow-card { box-shadow: var(--shadow-card) !important; }
+.shadow-card-hover { box-shadow: var(--shadow-hover) !important; }
+
+/* ============================================================
+   ACCENT COLOR — Dynamic from CSS variable (changeable)
+   ============================================================ */
+.text-primary { color: var(--primary) !important; }
+.bg-primary { background-color: var(--primary) !important; }
+.border-primary { border-color: var(--primary) !important; }
+.text-primary-dark { color: var(--primary-dark) !important; }
+.bg-primary-dark { background-color: var(--primary-dark) !important; }
+.text-primary-light { color: var(--primary-light) !important; }
+.bg-primary-light { background-color: var(--primary-light) !important; }
+.text-\[\#F472B6\] { color: var(--primary) !important; }
+.bg-\[\#F472B6\] { background-color: var(--primary) !important; }
+.text-\[\#EC4899\] { color: var(--primary-dark) !important; }
+.bg-\[\#EC4899\] { background-color: var(--primary-dark) !important; }
+.border-\[\#F9D0E8\] { border-color: var(--primary-light) !important; }
+.bg-\[\#FCE7F3\] { background-color: var(--primary-light) !important; }
+.bg-\[\#FDF2F8\] { background-color: var(--primary-xlight) !important; }
+.bg-primary-xlight { background-color: var(--primary-xlight) !important; }
+
+/* Teal accent */
+.text-\[\#67C4C0\] { color: var(--teal) !important; }
+.text-\[\#3FA8A4\] { color: var(--teal-dark) !important; }
+.bg-\[\#E0F5F5\] { background-color: var(--teal-light) !important; }
+
+/* Input/form dark-aware */
+input, textarea, select {
+  background-color: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+  transition: border-color 0.15s ease, background-color 0.25s ease;
+}
+
+/* Card panels */
+.rounded-card {
+  border-radius: 12px;
+}
+
+/* LTR / RTL */
+[dir="rtl"] { text-align: right; }
+[dir="rtl"] .ml-auto { margin-left: 0 !important; margin-right: auto !important; }
+[dir="rtl"] .border-r { border-right-width: 0px !important; border-left-width: 1px !important; }
+[dir="rtl"] .border-l { border-left-width: 0px !important; border-right-width: 1px !important; }

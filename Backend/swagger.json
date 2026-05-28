@@ -1,0 +1,4584 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SPA Management API",
+    "version": "1.0.0",
+    "description": "API documentation for the SPA Management system, including authentication, appointments, and services management."
+  },
+  "servers": [
+    {
+      "url": "https://aura-booking-nine.vercel.app",
+      "description": "Production Server (Vercel)"
+    },
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/admin/dashboard": {
+      "get": {
+        "summary": "Get dashboard statistics",
+        "description": "Retrieve summary stats including counts of active users, total and categorized appointments (Pending, Approved, Rejected), services, and categories.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard stats successfully fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Dashboard stats"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalUsers": {
+                          "type": "integer",
+                          "example": 45
+                        },
+                        "totalAppointments": {
+                          "type": "integer",
+                          "example": 120
+                        },
+                        "pendingAppointments": {
+                          "type": "integer",
+                          "example": 15
+                        },
+                        "approvedAppointments": {
+                          "type": "integer",
+                          "example": 85
+                        },
+                        "rejectedAppointments": {
+                          "type": "integer",
+                          "example": 20
+                        },
+                        "totalServices": {
+                          "type": "integer",
+                          "example": 18
+                        },
+                        "totalCategories": {
+                          "type": "integer",
+                          "example": 6
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "Get all system users",
+        "description": "Retrieve all registered users. Optional filters for `role` and `isActive` can be specified. Returns users sorted by registration date (newest first).",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "role",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "admin",
+                "user"
+              ]
+            },
+            "description": "Filter users by role"
+          },
+          {
+            "in": "query",
+            "name": "isActive",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Filter users by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users list fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Users fetched"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "example": 2
+                        },
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "summary": "Get user details and appointments",
+        "description": "Fetch detailed profile information of a specific user along with their complete appointment booking history.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique User ID",
+            "example": "60d21b4667d0d8992e610c82"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile and bookings fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User detail"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object"
+                        },
+                        "appointments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid User ID format"
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user",
+        "description": "Remove a user account from the system.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/admin/users/role/{id}": {
+      "put": {
+        "summary": "Change user role (Assign permissions)",
+        "description": "Update the role of a user to either \"user\" or \"admin\". Admins are prevented from changing their own role.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique User ID to modify",
+            "example": "60d21b4667d0d8992e610c82"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "role"
+                ],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "user",
+                      "admin"
+                    ],
+                    "description": "New role classification",
+                    "example": "admin"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Role updated to 'admin' successfully"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (e.g. invalid role specified, attempting to update own role)"
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "403": {
+            "description": "Forbidden - Admin role required"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/admin/users/toggle-status/{id}": {
+      "put": {
+        "summary": "Toggle user account status",
+        "description": "Activate or deactivate a user account.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User status toggled"
+          }
+        }
+      }
+    },
+    "/api/appointments/book": {
+      "post": {
+        "summary": "Book a new appointment",
+        "description": "Book a new spa appointment. All fields (fullName, address, state, country, mobileNumber, categoryId, serviceId, serviceType, appointmentDate) are required.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fullName",
+                  "address",
+                  "state",
+                  "country",
+                  "mobileNumber",
+                  "categoryId",
+                  "serviceId",
+                  "serviceType",
+                  "appointmentDate"
+                ],
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "456 Luxury Suite Rd"
+                  },
+                  "state": {
+                    "type": "string",
+                    "example": "Gujarat"
+                  },
+                  "country": {
+                    "type": "string",
+                    "example": "India"
+                  },
+                  "mobileNumber": {
+                    "type": "string",
+                    "example": 9876543210
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "example": "60d21b4667d0d8992e610c85"
+                  },
+                  "serviceId": {
+                    "type": "string",
+                    "example": "60d21b4667d0d8992e610c86"
+                  },
+                  "serviceType": {
+                    "type": "string",
+                    "enum": [
+                      "Normal",
+                      "High",
+                      "VIP",
+                      "VVIP"
+                    ],
+                    "example": "VIP"
+                  },
+                  "appointmentDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-06-15T10:00:00.000Z"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Prefer standard morning session."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Appointment booked successfully, pending admin approval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment booked successfully. Pending admin approval."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "appointment": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c87"
+                            },
+                            "user": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c84"
+                            },
+                            "fullName": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "address": {
+                              "type": "string",
+                              "example": "456 Luxury Suite Rd"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "category": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c85"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "example": "Massage"
+                                }
+                              }
+                            },
+                            "service": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c86"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Deep Tissue Massage"
+                                },
+                                "photo": {
+                                  "type": "string",
+                                  "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                                },
+                                "finalPrice": {
+                                  "type": "number",
+                                  "example": 120
+                                },
+                                "serviceType": {
+                                  "type": "string",
+                                  "example": "Massage"
+                                }
+                              }
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VIP"
+                            },
+                            "appointmentDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-06-15T10:00:00.000Z"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "Pending"
+                            },
+                            "orderNumber": {
+                              "type": "string",
+                              "example": "SPA-1716215328000-456"
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "notes": {
+                              "type": "string",
+                              "example": "Prefer standard morning session."
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error / Missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Validation Error"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Full name is required"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Service not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Service not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/appointments/my": {
+      "get": {
+        "summary": "Fetch current user's appointments list",
+        "description": "Retrieve all appointments booked by the currently authenticated user, sorted by the booking creation date (newest first). Supports filtering by status.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Pending",
+                "Approved",
+                "Rejected",
+                "Cancelled"
+              ]
+            },
+            "description": "Optional status filter to only show appointments matching this state."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointments fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointments fetched"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "appointments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c87"
+                              },
+                              "user": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c84"
+                              },
+                              "fullName": {
+                                "type": "string",
+                                "example": "Jane Doe"
+                              },
+                              "address": {
+                                "type": "string",
+                                "example": "456 Luxury Suite Rd"
+                              },
+                              "state": {
+                                "type": "string",
+                                "example": "Gujarat"
+                              },
+                              "country": {
+                                "type": "string",
+                                "example": "India"
+                              },
+                              "mobileNumber": {
+                                "type": "string",
+                                "example": 9876543210
+                              },
+                              "category": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "60d21b4667d0d8992e610c85"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Massage Therapies"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "example": "Massage"
+                                  }
+                                }
+                              },
+                              "service": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "60d21b4667d0d8992e610c86"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Deep Tissue Massage"
+                                  },
+                                  "photo": {
+                                    "type": "string",
+                                    "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                                  },
+                                  "finalPrice": {
+                                    "type": "number",
+                                    "example": 120
+                                  },
+                                  "serviceType": {
+                                    "type": "string",
+                                    "example": "Massage"
+                                  }
+                                }
+                              },
+                              "serviceType": {
+                                "type": "string",
+                                "example": "VIP"
+                              },
+                              "appointmentDate": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2026-06-15T10:00:00.000Z"
+                              },
+                              "status": {
+                                "type": "string",
+                                "example": "Pending"
+                              },
+                              "orderNumber": {
+                                "type": "string",
+                                "example": "SPA-1716215328000-456"
+                              },
+                              "price": {
+                                "type": "number",
+                                "example": 120
+                              },
+                              "notes": {
+                                "type": "string",
+                                "example": "Prefer standard morning session."
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2026-05-20T16:42:48.000Z"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2026-05-20T16:42:48.000Z"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/appointments/my/all": {
+      "delete": {
+        "summary": "Delete all appointments for the current user",
+        "description": "Permanently clear all appointment records booked by the currently authenticated user.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All appointments deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "3 appointments deleted"
+                    },
+                    "data": {
+                      "type": "object",
+                      "example": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/appointments/my/{id}": {
+      "get": {
+        "summary": "Fetch single appointment detail",
+        "description": "Retrieve detailed information about a specific appointment belonging to the logged-in user. Fully populates the associated category, service, and user data.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB ObjectId of the appointment."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointment detail fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment detail"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "appointment": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c87"
+                            },
+                            "user": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c84"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Jane Doe"
+                                },
+                                "email": {
+                                  "type": "string",
+                                  "example": "jane@example.com"
+                                },
+                                "mobileNumber": {
+                                  "type": "string",
+                                  "example": 9876543210
+                                },
+                                "profileImage": {
+                                  "type": "string",
+                                  "example": "https://res.cloudinary.com/demo/image/upload/v123456/profile.jpg"
+                                }
+                              }
+                            },
+                            "fullName": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "address": {
+                              "type": "string",
+                              "example": "456 Luxury Suite Rd"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "category": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c85"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "example": "Massage"
+                                }
+                              }
+                            },
+                            "service": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c86"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Deep Tissue Massage"
+                                },
+                                "photo": {
+                                  "type": "string",
+                                  "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                                },
+                                "finalPrice": {
+                                  "type": "number",
+                                  "example": 120
+                                },
+                                "serviceType": {
+                                  "type": "string",
+                                  "example": "Massage"
+                                },
+                                "description": {
+                                  "type": "string",
+                                  "example": "Thorough deep muscle massage therapy."
+                                }
+                              }
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VIP"
+                            },
+                            "appointmentDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-06-15T10:00:00.000Z"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "Pending"
+                            },
+                            "orderNumber": {
+                              "type": "string",
+                              "example": "SPA-1716215328000-456"
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "notes": {
+                              "type": "string",
+                              "example": "Prefer standard morning session."
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Appointment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a pending appointment",
+        "description": "Update the editable fields of a user's appointment. This is only allowed if the appointment is currently in 'Pending' status.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB ObjectId of the appointment."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "789 Wellness Boulevard"
+                  },
+                  "state": {
+                    "type": "string",
+                    "example": "Maharashtra"
+                  },
+                  "country": {
+                    "type": "string",
+                    "example": "India"
+                  },
+                  "mobileNumber": {
+                    "type": "string",
+                    "example": 9876543211
+                  },
+                  "serviceType": {
+                    "type": "string",
+                    "enum": [
+                      "Normal",
+                      "High",
+                      "VIP",
+                      "VVIP"
+                    ],
+                    "example": "VVIP"
+                  },
+                  "appointmentDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-06-16T14:30:00.000Z"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "example": "Please adjust time slightly if there is a conflict."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appointment updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment updated"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "appointment": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c87"
+                            },
+                            "user": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c84"
+                            },
+                            "fullName": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "address": {
+                              "type": "string",
+                              "example": "789 Wellness Boulevard"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Maharashtra"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543211
+                            },
+                            "category": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c85"
+                            },
+                            "service": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c86"
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VVIP"
+                            },
+                            "appointmentDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-06-16T14:30:00.000Z"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "Pending"
+                            },
+                            "orderNumber": {
+                              "type": "string",
+                              "example": "SPA-1716215328000-456"
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "notes": {
+                              "type": "string",
+                              "example": "Please adjust time slightly if there is a conflict."
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:50:00.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (e.g. appointment is not in Pending status)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Cannot edit appointment with status 'Approved'. Only Pending appointments can be edited."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Appointment not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a single appointment",
+        "description": "Permanently remove a specific appointment record belonging to the logged-in user.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB ObjectId of the appointment."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointment deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Appointment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/appointments/my/cancel/{id}": {
+      "put": {
+        "summary": "Cancel a pending or requested appointment",
+        "description": "Cancel an appointment belonging to the user. This is only allowed if the appointment has not yet been approved (i.e. status is Pending). Once cancelled, a notification is sent to the user.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB ObjectId of the appointment."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointment cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment cancelled"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "appointment": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c87"
+                            },
+                            "user": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c84"
+                            },
+                            "fullName": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "address": {
+                              "type": "string",
+                              "example": "456 Luxury Suite Rd"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "category": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c85"
+                            },
+                            "service": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c86"
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VIP"
+                            },
+                            "appointmentDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-06-15T10:00:00.000Z"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "Cancelled"
+                            },
+                            "orderNumber": {
+                              "type": "string",
+                              "example": "SPA-1716215328000-456"
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "notes": {
+                              "type": "string",
+                              "example": "Prefer standard morning session."
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:51:00.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (e.g. appointment already approved or cancelled)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Cannot cancel an already approved appointment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Appointment not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/appointments/admin/all": {
+      "get": {
+        "summary": "Fetch all system appointments (Admin Only)",
+        "description": "Retrieve a list of all appointments booked in the entire system, sorted by newest first. Admins can optionally filter the results by status.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Pending",
+                "Approved",
+                "Rejected",
+                "Cancelled"
+              ]
+            },
+            "description": "Optional status to filter appointments by."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully fetched all system appointments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "All appointments fetched"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "example": 12
+                        },
+                        "appointments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c87"
+                              },
+                              "user": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "60d21b4667d0d8992e610c84"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Jane Doe"
+                                  },
+                                  "email": {
+                                    "type": "string",
+                                    "example": "jane@example.com"
+                                  },
+                                  "mobileNumber": {
+                                    "type": "string",
+                                    "example": 9876543210
+                                  },
+                                  "profileImage": {
+                                    "type": "string",
+                                    "example": "https://res.cloudinary.com/demo/image/upload/v123456/profile.jpg"
+                                  }
+                                }
+                              },
+                              "fullName": {
+                                "type": "string",
+                                "example": "Jane Doe"
+                              },
+                              "address": {
+                                "type": "string",
+                                "example": "456 Luxury Suite Rd"
+                              },
+                              "state": {
+                                "type": "string",
+                                "example": "Gujarat"
+                              },
+                              "country": {
+                                "type": "string",
+                                "example": "India"
+                              },
+                              "mobileNumber": {
+                                "type": "string",
+                                "example": 9876543210
+                              },
+                              "category": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "60d21b4667d0d8992e610c85"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Massage Therapies"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "example": "Massage"
+                                  }
+                                }
+                              },
+                              "service": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "60d21b4667d0d8992e610c86"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Deep Tissue Massage"
+                                  },
+                                  "photo": {
+                                    "type": "string",
+                                    "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                                  },
+                                  "finalPrice": {
+                                    "type": "number",
+                                    "example": 120
+                                  },
+                                  "serviceType": {
+                                    "type": "string",
+                                    "example": "Massage"
+                                  }
+                                }
+                              },
+                              "serviceType": {
+                                "type": "string",
+                                "example": "VIP"
+                              },
+                              "appointmentDate": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2026-06-15T10:00:00.000Z"
+                              },
+                              "status": {
+                                "type": "string",
+                                "example": "Pending"
+                              },
+                              "orderNumber": {
+                                "type": "string",
+                                "example": "SPA-1716215328000-456"
+                              },
+                              "price": {
+                                "type": "number",
+                                "example": 120
+                              },
+                              "notes": {
+                                "type": "string",
+                                "example": "Prefer standard morning session."
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2026-05-20T16:42:48.000Z"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2026-05-20T16:42:48.000Z"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized (Invalid/Expired Token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Not authorized, token failed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User is not an admin).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Admin resource. Access denied"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Database connection timed out"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/appointments/admin/{id}": {
+      "get": {
+        "summary": "Fetch single appointment detail (Admin Only)",
+        "description": "Retrieve detailed information about a specific appointment in the system by its ID. Includes full details on the booking user, including their geo-location.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB ObjectId of the appointment."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointment details fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment detail"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "appointment": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c87"
+                            },
+                            "user": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c84"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Jane Doe"
+                                },
+                                "email": {
+                                  "type": "string",
+                                  "example": "jane@example.com"
+                                },
+                                "mobileNumber": {
+                                  "type": "string",
+                                  "example": 9876543210
+                                },
+                                "profileImage": {
+                                  "type": "string",
+                                  "example": "https://res.cloudinary.com/demo/image/upload/v123456/profile.jpg"
+                                },
+                                "location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "example": "Point"
+                                    },
+                                    "coordinates": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      },
+                                      "example": [
+                                        72.5714,
+                                        23.0225
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "fullName": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "address": {
+                              "type": "string",
+                              "example": "456 Luxury Suite Rd"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "category": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c85"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "example": "Massage"
+                                }
+                              }
+                            },
+                            "service": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c86"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Deep Tissue Massage"
+                                },
+                                "photo": {
+                                  "type": "string",
+                                  "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                                },
+                                "finalPrice": {
+                                  "type": "number",
+                                  "example": 120
+                                },
+                                "serviceType": {
+                                  "type": "string",
+                                  "example": "Massage"
+                                },
+                                "description": {
+                                  "type": "string",
+                                  "example": "Thorough deep muscle massage therapy."
+                                }
+                              }
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VIP"
+                            },
+                            "appointmentDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-06-15T10:00:00.000Z"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "Pending"
+                            },
+                            "orderNumber": {
+                              "type": "string",
+                              "example": "SPA-1716215328000-456"
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "notes": {
+                              "type": "string",
+                              "example": "Prefer standard morning session."
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized (Invalid/Expired Token)."
+          },
+          "403": {
+            "description": "Forbidden (User is not an admin)."
+          },
+          "404": {
+            "description": "Appointment not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/appointments/admin/{id}/status": {
+      "put": {
+        "summary": "Update appointment status (Admin Only)",
+        "description": "Update the status of a specific appointment. Must be Approved, Rejected, or Pending. Modifying the status triggers appropriate in-app notifications to the booking user.",
+        "tags": [
+          "Appointments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB ObjectId of the appointment."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Approved",
+                      "Rejected",
+                      "Pending"
+                    ],
+                    "example": "Approved"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appointment status updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Appointment status updated to 'Approved'"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "appointment": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c87"
+                            },
+                            "user": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c84"
+                            },
+                            "fullName": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "address": {
+                              "type": "string",
+                              "example": "456 Luxury Suite Rd"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "category": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c85"
+                            },
+                            "service": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c86"
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VIP"
+                            },
+                            "appointmentDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-06-15T10:00:00.000Z"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "Approved"
+                            },
+                            "orderNumber": {
+                              "type": "string",
+                              "example": "SPA-1716215328000-456"
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "notes": {
+                              "type": "string",
+                              "example": "Prefer standard morning session."
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:42:48.000Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:55:00.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (Invalid status or invalid ObjectId).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Status must be Approved, Rejected, or Pending"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized."
+          },
+          "403": {
+            "description": "Forbidden (Admin only)."
+          },
+          "404": {
+            "description": "Appointment not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "description": "Register a new user account with details and an optional facial verification image upload. Role is default \"user\" and cannot be modified from the request payload.",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the user",
+                    "example": "Jane Doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Unique email address of the user",
+                    "example": "jane@example.com"
+                  },
+                  "mobileNumber": {
+                    "type": "string",
+                    "description": "Unique mobile contact number",
+                    "example": 9876543210
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minimum": 6,
+                    "description": "Password for account login (min 6 characters)",
+                    "example": "securePassword123"
+                  },
+                  "age": {
+                    "type": "integer",
+                    "description": "Age of the user",
+                    "example": 25
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "male",
+                      "female",
+                      "other"
+                    ],
+                    "description": "Gender identity of the user",
+                    "example": "female"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Country of residence",
+                    "example": "India"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or region of residence",
+                    "example": "Gujarat"
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "description": "Current latitude coordinate",
+                    "example": 23.0225
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "description": "Current longitude coordinate",
+                    "example": 72.5714
+                  },
+                  "faceScreenshot": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Portrait image file upload for facial registration"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Registered successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "description": "JWT session token",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c84"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "jane@example.com"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "age": {
+                              "type": "integer",
+                              "example": 25
+                            },
+                            "gender": {
+                              "type": "string",
+                              "example": "female"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "profileImage": {
+                              "type": "string",
+                              "example": ""
+                            },
+                            "faceScreenshot": {
+                              "type": "string",
+                              "example": "https://res.cloudinary.com/demo/image/upload/v123456/face.jpg"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "user"
+                            },
+                            "location": {
+                              "type": "object",
+                              "properties": {
+                                "latitude": {
+                                  "type": "number",
+                                  "example": 23.0225
+                                },
+                                "longitude": {
+                                  "type": "number",
+                                  "example": 72.5714
+                                }
+                              }
+                            },
+                            "isActive": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:50:30.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or duplicate credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User with this email or mobile number already exists"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Server database timed out"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Authenticate / Login user",
+        "description": "Login using email/mobileNumber/identifier combined with a password. Updates user geolocation in the system if coordinates are supplied.",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "description": "User email address",
+                    "example": "jane@example.com"
+                  },
+                  "mobileNumber": {
+                    "type": "string",
+                    "description": "User mobile number",
+                    "example": 9876543210
+                  },
+                  "identifier": {
+                    "type": "string",
+                    "description": "Alternative field accepting either email or mobile number",
+                    "example": "jane@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "User password",
+                    "example": "securePassword123"
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "description": "Current latitude location coordinate",
+                    "example": 23.0225
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "description": "Current longitude location coordinate",
+                    "example": 72.5714
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Login successful"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c84"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "jane@example.com"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "age": {
+                              "type": "integer",
+                              "example": 25
+                            },
+                            "gender": {
+                              "type": "string",
+                              "example": "female"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "profileImage": {
+                              "type": "string",
+                              "example": ""
+                            },
+                            "faceScreenshot": {
+                              "type": "string",
+                              "example": "https://res.cloudinary.com/demo/image/upload/v123456/face.jpg"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "user"
+                            },
+                            "location": {
+                              "type": "object",
+                              "properties": {
+                                "latitude": {
+                                  "type": "number",
+                                  "example": 23.0225
+                                },
+                                "longitude": {
+                                  "type": "number",
+                                  "example": 72.5714
+                                }
+                              }
+                            },
+                            "isActive": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:50:30.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Email or mobile number is required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid credentials"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account deactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Your account has been deactivated. Contact support."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/home/slider": {
+      "get": {
+        "summary": "Get slider services (Latest 10 active services)",
+        "description": "Retrieve the top 10 newest active services to populate the landing page carousel/slider.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slider data fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Slider data fetched"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "services": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c86"
+                              },
+                              "name": {
+                                "type": "string",
+                                "example": "Deep Tissue Massage"
+                              },
+                              "title": {
+                                "type": "string",
+                                "example": "Pure Relaxation"
+                              },
+                              "photo": {
+                                "type": "string",
+                                "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                              },
+                              "price": {
+                                "type": "number",
+                                "example": 120
+                              },
+                              "discount": {
+                                "type": "number",
+                                "example": 10
+                              },
+                              "finalPrice": {
+                                "type": "number",
+                                "example": 108
+                              },
+                              "serviceType": {
+                                "type": "string",
+                                "example": "Normal"
+                              },
+                              "category": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "60d21b4667d0d8992e610c85"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Massage Therapies"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "example": "Massage"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/add-category": {
+      "post": {
+        "summary": "Add a new category (Admin Only)",
+        "description": "Create a new service category. Category name must be unique.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Unique category name",
+                    "example": "Massage Therapies"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "Massage Therapies",
+                      "Facials & Skincare",
+                      "Body Treatments",
+                      "Nail Care",
+                      "Salon & Waxing",
+                      "Spa Packages",
+                      "Specialty/Med-Spa Treatments"
+                    ],
+                    "description": "System-defined category classification type",
+                    "example": "Massage Therapies"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Brief description of what services are in this category",
+                    "example": "Relaxing massage therapies for wellness."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category added successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "60d21b4667d0d8992e610c85"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Massage Therapies"
+                        },
+                        "type": {
+                          "type": "string",
+                          "example": "Massage Therapies"
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "Relaxing massage therapies for wellness."
+                        },
+                        "isActive": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-05-20T16:50:30.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-05-20T16:50:30.000Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error / Category already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category with this name already exists"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Admin only access"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/update-category/{id}": {
+      "put": {
+        "summary": "Update an existing category (Admin Only)",
+        "description": "Update details of an existing category by its unique ID.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Category MongoDB ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Massage Therapies Premium"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "Massage Therapies",
+                      "Facials & Skincare",
+                      "Body Treatments",
+                      "Nail Care",
+                      "Salon & Waxing",
+                      "Spa Packages",
+                      "Specialty/Med-Spa Treatments"
+                    ],
+                    "example": "Massage Therapies"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Advanced skin rejuvenation facials."
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category updated"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "category": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c85"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Massage Therapies Premium"
+                            },
+                            "type": {
+                              "type": "string",
+                              "example": "Massage Therapies"
+                            },
+                            "description": {
+                              "type": "string",
+                              "example": "Advanced skin rejuvenation facials."
+                            },
+                            "isActive": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:50:30.000Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-05-20T16:52:00.000Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Admin only access"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/delete-category/{id}": {
+      "delete": {
+        "summary": "Delete a category (Admin Only)",
+        "description": "Permanently remove a service category from the system by ID.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Category MongoDB ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category deleted successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "60d21b4667d0d8992e610c85"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Massage Therapies"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Admin only access"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/category": {
+      "get": {
+        "summary": "Fetch categories list",
+        "description": "Retrieve categories list. Supports page/limit pagination and optional classification type filtering. Automatically populates basic associated services info.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional category classification type to filter by"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Page number for pagination"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Total items returned per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categories fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Categories fetched successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "60d21b4667d0d8992e610c85"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Massage Therapies"
+                          },
+                          "type": {
+                            "type": "string",
+                            "example": "Massage Therapies"
+                          },
+                          "description": {
+                            "type": "string",
+                            "example": "Relaxing massage therapies for wellness."
+                          },
+                          "isActive": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "services": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c86"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Deep Tissue Massage"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/add-service": {
+      "post": {
+        "summary": "Add a new service (Admin Only)",
+        "description": "Create a new spa service with an image upload. finalPrice is auto-computed based on price and discount percentage.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "photo",
+                  "name",
+                  "description",
+                  "price",
+                  "categoryId"
+                ],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file representing the service"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Swedish Massage"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "A relaxing full body massage using traditional Swedish techniques."
+                  },
+                  "price": {
+                    "type": "number",
+                    "description": "Base cost of the service",
+                    "example": 80
+                  },
+                  "discount": {
+                    "type": "number",
+                    "description": "Discount percentage value (0 to 100)",
+                    "example": 10
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Promotional subtitle",
+                    "example": "Pure Relaxation"
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "description": "The Mongoose ObjectId of the associated category",
+                    "example": "60d21b4667d0d8992e610c85"
+                  },
+                  "serviceType": {
+                    "type": "string",
+                    "enum": [
+                      "Normal",
+                      "High",
+                      "VIP",
+                      "VVIP"
+                    ],
+                    "default": "Normal",
+                    "example": "Normal"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Service added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Service added successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "service": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c86"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Swedish Massage"
+                            },
+                            "photo": {
+                              "type": "string",
+                              "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                            },
+                            "description": {
+                              "type": "string",
+                              "example": "A relaxing full body massage using traditional Swedish techniques."
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 80
+                            },
+                            "discount": {
+                              "type": "number",
+                              "example": 10
+                            },
+                            "finalPrice": {
+                              "type": "number",
+                              "example": 72
+                            },
+                            "title": {
+                              "type": "string",
+                              "example": "Pure Relaxation"
+                            },
+                            "category": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c85"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                }
+                              }
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "Normal"
+                            },
+                            "isActive": {
+                              "type": "boolean",
+                              "example": true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation / Bad request error"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Admin only access"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/update-service/{id}": {
+      "put": {
+        "summary": "Update an existing service (Admin Only)",
+        "description": "Update details of an existing service by ID. Uploading a new image will automatically clean up the old one from Cloudinary.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service MongoDB ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "New service photo file (optional)"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Swedish Massage Luxury"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Upgraded luxury full body massage."
+                  },
+                  "price": {
+                    "type": "number",
+                    "example": 120
+                  },
+                  "discount": {
+                    "type": "number",
+                    "example": 15
+                  },
+                  "title": {
+                    "type": "string",
+                    "example": "Ultimate Relaxation"
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "example": "60d21b4667d0d8992e610c85"
+                  },
+                  "serviceType": {
+                    "type": "string",
+                    "enum": [
+                      "Normal",
+                      "High",
+                      "VIP",
+                      "VVIP"
+                    ],
+                    "example": "VIP"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Service updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Service updated"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "service": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c86"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Swedish Massage Luxury"
+                            },
+                            "photo": {
+                              "type": "string",
+                              "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service_new.jpg"
+                            },
+                            "description": {
+                              "type": "string",
+                              "example": "Upgraded luxury full body massage."
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "discount": {
+                              "type": "number",
+                              "example": 15
+                            },
+                            "finalPrice": {
+                              "type": "number",
+                              "example": 102
+                            },
+                            "title": {
+                              "type": "string",
+                              "example": "Ultimate Relaxation"
+                            },
+                            "category": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c85"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                }
+                              }
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VIP"
+                            },
+                            "isActive": {
+                              "type": "boolean",
+                              "example": true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Admin only access"
+          },
+          "404": {
+            "description": "Service not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/delete-service/{id}": {
+      "delete": {
+        "summary": "Delete a service (Admin Only)",
+        "description": "Permanently remove a service from the system and delete its photo asset from Cloudinary storage.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service MongoDB ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Service deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "403": {
+            "description": "Admin only access"
+          },
+          "404": {
+            "description": "Service not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/services": {
+      "get": {
+        "summary": "Fetch active services list",
+        "description": "Retrieve all active (isActive=true) spa services. Supports optional category ID and case-insensitive service type filtering.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "categoryId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional Category ID to filter services"
+          },
+          {
+            "in": "query",
+            "name": "serviceType",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional service type tier filter (e.g. \"Normal\", \"High\", \"VIP\", \"VVIP\")"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Services fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Services fetched"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "example": 2
+                        },
+                        "services": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c86"
+                              },
+                              "name": {
+                                "type": "string",
+                                "example": "Deep Tissue Massage"
+                              },
+                              "photo": {
+                                "type": "string",
+                                "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                              },
+                              "description": {
+                                "type": "string",
+                                "example": "Thorough deep muscle massage therapy."
+                              },
+                              "price": {
+                                "type": "number",
+                                "example": 120
+                              },
+                              "discount": {
+                                "type": "number",
+                                "example": 0
+                              },
+                              "finalPrice": {
+                                "type": "number",
+                                "example": 120
+                              },
+                              "title": {
+                                "type": "string",
+                                "example": "Deep Tissue Specialists"
+                              },
+                              "category": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "60d21b4667d0d8992e610c85"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "example": "Massage Therapies"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "example": "Massage Therapies"
+                                  }
+                                }
+                              },
+                              "serviceType": {
+                                "type": "string",
+                                "example": "VIP"
+                              },
+                              "isActive": {
+                                "type": "boolean",
+                                "example": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/home/service/{id}": {
+      "get": {
+        "summary": "Fetch single service detail",
+        "description": "Retrieve detailed specifications of an active spa service by its ID, populating its category information.",
+        "tags": [
+          "Home"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service MongoDB ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service detail fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Service detail"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "service": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c86"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Deep Tissue Massage"
+                            },
+                            "photo": {
+                              "type": "string",
+                              "example": "https://res.cloudinary.com/demo/image/upload/v123456/spa/service.jpg"
+                            },
+                            "description": {
+                              "type": "string",
+                              "example": "Thorough deep muscle massage therapy."
+                            },
+                            "price": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "discount": {
+                              "type": "number",
+                              "example": 0
+                            },
+                            "finalPrice": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "title": {
+                              "type": "string",
+                              "example": "Deep Tissue Specialists"
+                            },
+                            "category": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "60d21b4667d0d8992e610c85"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "example": "Massage Therapies"
+                                }
+                              }
+                            },
+                            "serviceType": {
+                              "type": "string",
+                              "example": "VIP"
+                            },
+                            "isActive": {
+                              "type": "boolean",
+                              "example": true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Service not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Service not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "summary": "Fetch user notifications",
+        "description": "Retrieve all notifications for the authenticated user, sorted by creation date (newest first), along with the total count of unread notifications.",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Notifications fetched"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "unreadCount": {
+                          "type": "integer",
+                          "example": 2
+                        },
+                        "count": {
+                          "type": "integer",
+                          "example": 5
+                        },
+                        "notifications": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c84"
+                              },
+                              "user": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c82"
+                              },
+                              "title": {
+                                "type": "string",
+                                "example": "Appointment Booked"
+                              },
+                              "message": {
+                                "type": "string",
+                                "example": "Your appointment has been booked successfully."
+                              },
+                              "isRead": {
+                                "type": "boolean",
+                                "example": false
+                              },
+                              "appointment": {
+                                "type": "string",
+                                "example": "60d21b4667d0d8992e610c83"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2026-05-21T10:00:00.000Z"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/notifications/read-all": {
+      "put": {
+        "summary": "Mark all notifications as read",
+        "description": "Mark all unread notifications belonging to the authenticated user as read.",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications marked as read successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "3 notifications marked as read"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/notifications/read/{id}": {
+      "put": {
+        "summary": "Mark a specific notification as read",
+        "description": "Mark a single notification as read by its unique notification ID.",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique notification ID",
+            "example": "60d21b4667d0d8992e610c84"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification marked as read successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Notification marked as read"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "notification": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid notification ID format"
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "404": {
+            "description": "Notification not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/notifications/all": {
+      "delete": {
+        "summary": "Delete all notifications",
+        "description": "Delete all notifications belonging to the authenticated user.",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All notifications deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "5 notifications deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/notifications/{id}": {
+      "delete": {
+        "summary": "Delete a specific notification",
+        "description": "Delete a single notification by its unique notification ID.",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique notification ID",
+            "example": "60d21b4667d0d8992e610c84"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Notification deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid notification ID format"
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "404": {
+            "description": "Notification not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "summary": "Get authenticated user profile",
+        "description": "Retrieve the currently logged in user's profile information (excludes password).",
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Profile fetched"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "60d21b4667d0d8992e610c82"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Jane Doe"
+                            },
+                            "email": {
+                              "type": "string",
+                              "example": "jane@example.com"
+                            },
+                            "mobileNumber": {
+                              "type": "string",
+                              "example": 9876543210
+                            },
+                            "age": {
+                              "type": "integer",
+                              "example": 25
+                            },
+                            "gender": {
+                              "type": "string",
+                              "example": "female"
+                            },
+                            "country": {
+                              "type": "string",
+                              "example": "India"
+                            },
+                            "state": {
+                              "type": "string",
+                              "example": "Gujarat"
+                            },
+                            "profileImage": {
+                              "type": "string",
+                              "example": "https://res.cloudinary.com/demo/image/upload/v123456/profile.jpg"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "user"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user profile",
+        "description": "Update the authenticated user's profile information. Supports uploading a new profile picture.",
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the user",
+                    "example": "Jane Doe Updated"
+                  },
+                  "age": {
+                    "type": "integer",
+                    "description": "Age of the user",
+                    "example": 26
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "male",
+                      "female",
+                      "other"
+                    ],
+                    "description": "Gender identity of the user",
+                    "example": "female"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Country of residence",
+                    "example": "India"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or region",
+                    "example": "Gujarat"
+                  },
+                  "mobileNumber": {
+                    "type": "string",
+                    "description": "Mobile number of the user",
+                    "example": 9876543210
+                  },
+                  "profileImage": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload as profile avatar"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Profile updated successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/profile/change-password": {
+      "put": {
+        "summary": "Change user password",
+        "description": "Update password for the authenticated user session. Validates old password and requires new password confirmation.",
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "oldPassword",
+                  "newPassword",
+                  "conformPassword"
+                ],
+                "properties": {
+                  "oldPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "Current password of the user",
+                    "example": "securePassword123"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "minimum": 6,
+                    "description": "New password for login",
+                    "example": "newlySecurePass456"
+                  },
+                  "conformPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "Re-entered new password for verification",
+                    "example": "newlySecurePass456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Password changed successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (e.g. password mismatch, invalid length, incorrect old password)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "New password and confirm password do not match"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized session"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Admin",
+      "description": "Administrative dashboard, user listings, and permission controls (Requires Admin Role)"
+    },
+    {
+      "name": "Appointments",
+      "description": "Appointment booking and management for users and admin administrators"
+    },
+    {
+      "name": "Auth",
+      "description": "User registration and authentication management"
+    },
+    {
+      "name": "Home",
+      "description": "Category, Service, and Homepage management"
+    },
+    {
+      "name": "Notifications",
+      "description": "User notification history and read status management"
+    },
+    {
+      "name": "Profile",
+      "description": "Authenticated user profile and password management"
+    }
+  ]
+}
