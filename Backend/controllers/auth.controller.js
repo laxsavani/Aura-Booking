@@ -13,7 +13,7 @@ const formatUser = (user) => ({
   state: user.state,
   profileImage: user.profileImage,
   faceScreenshot: user.faceScreenshot,
-  role: user.role,           // ← always from DB, never from request
+  role: user.role, // ← always from DB, never from request
   location: user.location,
   isActive: user.isActive,
   createdAt: user.createdAt,
@@ -52,7 +52,11 @@ const register = async (req, res) => {
 
     const existing = await User.findOne({ $or: orQuery });
     if (existing) {
-      return sendError(res, 400, "User with this email or mobile number already exists");
+      return sendError(
+        res,
+        400,
+        "User with this email or mobile number already exists",
+      );
     }
 
     // Build user data — role is NOT accepted from request body
@@ -123,7 +127,11 @@ const login = async (req, res) => {
       return sendError(res, 401, "Invalid credentials");
     }
     if (!user.isActive) {
-      return sendError(res, 403, "Your account has been deactivated. Contact support.");
+      return sendError(
+        res,
+        403,
+        "Your account has been deactivated. Contact support.",
+      );
     }
 
     // Verify password
@@ -152,7 +160,22 @@ const login = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
+  logout
 };

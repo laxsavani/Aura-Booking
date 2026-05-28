@@ -339,4 +339,43 @@ router.post(
  */
 router.post("/login", c.login);
 
+// NODEJS LOGOUT API
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Log out user
+ *     description: Clear user session. The client (e.g. web browser or Flutter app) is responsible for deleting the JWT token from local storage or secure storage.
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Logout successful
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Server Error
+ */
+router.post("/logout", c.logout);
+
 module.exports = router;
