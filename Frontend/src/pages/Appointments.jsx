@@ -352,18 +352,19 @@ export const Appointments = () => {
           />
 
           {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
             {/* Service Type Select */}
             <FilterSelect
               value={selectedType}
               onChange={setSelectedType}
               options={serviceTypeOptions}
               label="Service Type"
+              className="w-full sm:w-auto"
             />
 
             {/* Date Inputs */}
-            <div className="flex items-center gap-2">
-              <div className="relative h-10 w-36">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative h-10 flex-1 sm:w-36 sm:flex-none">
                 <span className="absolute -top-2 left-3 bg-white px-1 text-[9px] font-bold text-[#6B6B8A] z-10 select-none">
                   Date From
                 </span>
@@ -375,7 +376,7 @@ export const Appointments = () => {
                 />
               </div>
               <span className="text-xs text-[#A8A8C0] font-bold select-none">to</span>
-              <div className="relative h-10 w-36">
+              <div className="relative h-10 flex-1 sm:w-36 sm:flex-none">
                 <span className="absolute -top-2 left-3 bg-white px-1 text-[9px] font-bold text-[#6B6B8A] z-10 select-none">
                   Date To
                 </span>

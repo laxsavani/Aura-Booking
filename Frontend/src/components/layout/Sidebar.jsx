@@ -57,7 +57,8 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
     if (toggleSidebar) toggleSidebar();
   };
 
-  const sidebarWidth = sidebarCollapsed ? "72px" : "260px";
+  const isCollapsed = sidebarCollapsed && !isMobileOpen;
+  const sidebarWidth = isCollapsed ? "72px" : "260px";
 
   return (
     <>
@@ -79,7 +80,7 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
               backgroundColor: "var(--card)",
               border: "1px solid var(--border)",
               color: "var(--muted)",
-              top: sidebarCollapsed ? "86px" : "105px"
+              top: isCollapsed ? "86px" : "105px"
             }}
             onMouseEnter={e => {
               e.currentTarget.style.backgroundColor = "var(--primary-light)";
@@ -92,7 +93,7 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
               e.currentTarget.style.borderColor = "var(--border)";
             }}
           >
-            {sidebarCollapsed
+            {isCollapsed
               ? <ChevronRight className="w-4 h-4" />
               : <ChevronLeft className="w-4 h-4" />
             }
@@ -104,11 +105,11 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
           onClick={() => navigate("/dashboard")}
           className="py-5 flex flex-col gap-1.5 flex-shrink-0 cursor-pointer"
           style={{
-            padding: sidebarCollapsed ? "20px 8px" : "20px 24px",
+            padding: isCollapsed ? "20px 8px" : "20px 24px",
             borderBottom: "1px solid var(--border)"
           }}
         >
-          {sidebarCollapsed ? (
+          {isCollapsed ? (
             <img src="/favicon.png" alt="Aura" className="h-9 w-9 object-contain mx-auto" />
           ) : (
             <>
@@ -127,10 +128,10 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
         {/* Nav Items */}
         <div
           className="flex-1 flex flex-col gap-5 py-5 overflow-y-auto"
-          style={{ padding: sidebarCollapsed ? "20px 8px" : "20px 12px" }}
+          style={{ padding: isCollapsed ? "20px 8px" : "20px 12px" }}
         >
           <div className="flex flex-col gap-1.5">
-            {!sidebarCollapsed && (
+            {!isCollapsed && (
               <span
                 className="text-[9px] font-bold uppercase tracking-[0.2em] px-3"
                 style={{ color: "var(--hint)" }}
@@ -144,13 +145,13 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
                 return (
                   <motion.div
                     key={item.path}
-                    whileHover={{ x: sidebarCollapsed ? 0 : 4 }}
+                    whileHover={{ x: isCollapsed ? 0 : 4 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     onClick={() => handleNavClick(item.path)}
                     className="flex items-center rounded-lg cursor-pointer transition-colors duration-150 relative"
                     style={{
-                      padding: sidebarCollapsed ? "12px" : "10px 14px",
-                      justifyContent: sidebarCollapsed ? "center" : "space-between",
+                      padding: isCollapsed ? "12px" : "10px 14px",
+                      justifyContent: isCollapsed ? "center" : "space-between",
                       backgroundColor: isActive ? "var(--primary-light)" : "transparent",
                       color: isActive ? "var(--primary)" : "var(--muted)"
                     }}
@@ -166,12 +167,12 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
                         className="w-[18px] h-[18px] flex-shrink-0"
                         style={{ color: isActive ? "var(--primary)" : "var(--hint)" }}
                       />
-                      {!sidebarCollapsed && (
+                      {!isCollapsed && (
                         <span className="text-xs font-semibold">{item.label}</span>
                       )}
                     </div>
                     {item.badge !== undefined && item.badge > 0 && (
-                      sidebarCollapsed ? (
+                      isCollapsed ? (
                         <span
                           className="absolute top-1 right-1 w-4 h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center"
                           style={{ backgroundColor: "var(--primary)" }}
@@ -197,7 +198,7 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
           </div>
 
           <div className="flex flex-col gap-1.5 mt-auto">
-            {!sidebarCollapsed && (
+            {!isCollapsed && (
               <span
                 className="text-[9px] font-bold uppercase tracking-[0.2em] px-3"
                 style={{ color: "var(--hint)" }}
@@ -207,14 +208,14 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
             )}
             <div className="flex flex-col gap-1 mt-1">
               <motion.div
-                whileHover={{ x: sidebarCollapsed ? 0 : 4 }}
+                whileHover={{ x: isCollapsed ? 0 : 4 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 onClick={() => handleNavClick("/settings")}
                 className="flex items-center rounded-lg cursor-pointer transition-colors duration-150"
                 style={{
-                  padding: sidebarCollapsed ? "12px" : "10px 14px",
-                  justifyContent: sidebarCollapsed ? "center" : "flex-start",
-                  gap: sidebarCollapsed ? 0 : "12px",
+                  padding: isCollapsed ? "12px" : "10px 14px",
+                  justifyContent: isCollapsed ? "center" : "flex-start",
+                  gap: isCollapsed ? 0 : "12px",
                   backgroundColor: location.pathname.startsWith("/settings") ? "var(--primary-light)" : "transparent",
                   color: location.pathname.startsWith("/settings") ? "var(--primary)" : "var(--muted)"
                 }}
@@ -229,7 +230,7 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
                   className="w-[18px] h-[18px] flex-shrink-0"
                   style={{ color: location.pathname.startsWith("/settings") ? "var(--primary)" : "var(--hint)" }}
                 />
-                {!sidebarCollapsed && <span className="text-xs font-semibold">Settings</span>}
+                {!isCollapsed && <span className="text-xs font-semibold">Settings</span>}
               </motion.div>
             </div>
           </div>
@@ -240,16 +241,16 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
           <div
             className="flex items-center flex-shrink-0"
             style={{
-              padding: sidebarCollapsed ? "16px 8px" : "16px 20px",
+              padding: isCollapsed ? "16px 8px" : "16px 20px",
               borderTop: "1px solid var(--border)",
-              justifyContent: sidebarCollapsed ? "center" : "space-between",
+              justifyContent: isCollapsed ? "center" : "space-between",
               width: "100%"
             }}
           >
             <div
-              className={`flex items-center gap-3 min-w-0 ${sidebarCollapsed ? "cursor-pointer" : ""}`}
-              onClick={() => sidebarCollapsed && setShowLogoutModal(true)}
-              title={sidebarCollapsed ? "Logout" : undefined}
+              className={`flex items-center gap-3 min-w-0 ${isCollapsed ? "cursor-pointer" : ""}`}
+              onClick={() => isCollapsed && setShowLogoutModal(true)}
+              title={isCollapsed ? "Logout" : undefined}
             >
               <div className="relative flex-shrink-0">
                 <Avatar name={admin.name} image={admin.profileImage} size={36} />
@@ -258,7 +259,7 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
                   style={{ backgroundColor: "var(--teal)" }}
                 />
               </div>
-              {!sidebarCollapsed && (
+              {!isCollapsed && (
                 <div className="flex flex-col min-w-0">
                   <span className="text-xs font-bold truncate leading-tight" style={{ color: "var(--text)" }}>
                     {admin.name}
@@ -270,7 +271,7 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
               )}
             </div>
 
-            {!sidebarCollapsed && (
+            {!isCollapsed && (
               <button
                 onClick={() => setShowLogoutModal(true)}
                 className="p-1.5 rounded-lg text-[#A8A8C0] hover:text-[#EC4899] hover:bg-[#FCE7F3]/40 border-none bg-transparent cursor-pointer transition-colors"
