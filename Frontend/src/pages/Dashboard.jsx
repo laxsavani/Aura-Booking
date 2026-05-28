@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -26,7 +26,6 @@ import Avatar from "../components/ui/Avatar";
 import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import api from "../api/axios";
 
-// Recharts components
 import {
   ResponsiveContainer,
   BarChart,
@@ -37,7 +36,9 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  AreaChart,
+  Area
 } from "recharts";
 
 export const Dashboard = () => {
@@ -57,10 +58,12 @@ export const Dashboard = () => {
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Dynamic Chart States
-  const [weeklyOverviewData, setWeeklyOverviewData] = useState([]);
-  const [serviceDistributionData, setServiceDistributionData] = useState([]);
-  const [totalServiceBookings, setTotalServiceBookings] = useState(0);
+  // Dynamic Chart States and Filters
+  const [allAppointments, setAllAppointments] = useState([]);
+  const [overviewFilter, setOverviewFilter] = useState("week"); // day, week, month, year
+  const [serviceFilter, setServiceFilter] = useState("month"); // day, week, month, year
+  const [revenueFilter, setRevenueFilter] = useState("month"); // day, week, month, year
+  const [categoryFilter, setCategoryFilter] = useState("month"); // day, week, month, year
 
   const fetchDashboardStats = useCallback(async () => {
     try {
@@ -79,64 +82,513 @@ export const Dashboard = () => {
       const res = await api.get("/appointments/admin/all");
       if (res.data?.success) {
         const allAppts = res.data.data.appointments || [];
-
-        // 1. Group last 7 days or group by day of week
-        const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const dayGroups = {
-          Mon: { name: "Mon", Approved: 0, Pending: 0, Rejected: 0 },
-          Tue: { name: "Tue", Approved: 0, Pending: 0, Rejected: 0 },
-          Wed: { name: "Wed", Approved: 0, Pending: 0, Rejected: 0 },
-          Thu: { name: "Thu", Approved: 0, Pending: 0, Rejected: 0 },
-          Fri: { name: "Fri", Approved: 0, Pending: 0, Rejected: 0 },
-          Sat: { name: "Sat", Approved: 0, Pending: 0, Rejected: 0 },
-          Sun: { name: "Sun", Approved: 0, Pending: 0, Rejected: 0 }
-        };
-
-        allAppts.forEach(appt => {
-          if (!appt.appointmentDate) return;
-          const date = new Date(appt.appointmentDate);
-          const dayName = weekdays[date.getDay()];
-          const status = appt.status;
-          
-          if (dayGroups[dayName] && (status === "Approved" || status === "Pending" || status === "Rejected")) {
-            dayGroups[dayName][status]++;
-          }
-        });
-
-        const orderedDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => dayGroups[day]);
-        setWeeklyOverviewData(orderedDays);
-
-        // 2. Service Distribution Grouping by serviceType
-        const serviceGroups = {
-          Normal: 0,
-          High: 0,
-          VIP: 0,
-          VVIP: 0
-        };
-
-        allAppts.forEach(appt => {
-          const type = appt.serviceType || "Normal";
-          if (serviceGroups[type] !== undefined) {
-            serviceGroups[type]++;
-          } else {
-            serviceGroups.Normal++;
-          }
-        });
-
-        const dist = [
-          { name: "Normal", value: serviceGroups.Normal, color: "#E0F5F5" },
-          { name: "High", value: serviceGroups.High, color: "#67C4C0" },
-          { name: "VIP", value: serviceGroups.VIP, color: "#F472B6" },
-          { name: "VVIP", value: serviceGroups.VVIP, color: "#EC4899" }
-        ];
-
-        setServiceDistributionData(dist);
-        setTotalServiceBookings(allAppts.length);
+        setAllAppointments(allAppts);
       }
     } catch (err) {
       console.error("Failed to compile dynamic chart aggregates", err);
     }
   }, []);
+
+  // Reactive computations for Appointments Overview chart (Bar Chart)
+  const weeklyOverviewData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    // Bounds for Today (Day)
+    const todayStart = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
+    const todayEnd = new Date(currentYear, currentMonth, currentDate, 23, 59, 59, 999);
+
+    // Bounds for This Week (Monday to Sunday)
+    const currentDay = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const startOfWeek = new Date(currentYear, currentMonth, currentDate + distanceToMonday, 0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+
+    // Bounds for This Month (1st to last day of month)
+    const startOfMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+    // Bounds for This Year (Jan 1 to Dec 31)
+    const startOfYear = new Date(currentYear, 0, 1, 0, 0, 0, 0);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+    // Filter appointments by selected date range
+    const filtered = allAppointments.filter(appt => {
+      if (!appt.appointmentDate) return false;
+      const apptDate = new Date(appt.appointmentDate);
+
+      switch (overviewFilter) {
+        case "day":
+          return apptDate >= todayStart && apptDate <= todayEnd;
+        case "week":
+          return apptDate >= startOfWeek && apptDate <= endOfWeek;
+        case "month":
+          return apptDate >= startOfMonth && apptDate <= endOfMonth;
+        case "year":
+          return apptDate >= startOfYear && apptDate <= endOfYear;
+        default:
+          return true;
+      }
+    });
+
+    // Group the filtered appointments
+    if (overviewFilter === "day") {
+      const groups = [
+        { name: "Before 9 AM", Approved: 0, Pending: 0, Rejected: 0 },
+        { name: "9 AM - 12 PM", Approved: 0, Pending: 0, Rejected: 0 },
+        { name: "12 PM - 3 PM", Approved: 0, Pending: 0, Rejected: 0 },
+        { name: "3 PM - 6 PM", Approved: 0, Pending: 0, Rejected: 0 },
+        { name: "6 PM - 9 PM", Approved: 0, Pending: 0, Rejected: 0 },
+        { name: "After 9 PM", Approved: 0, Pending: 0, Rejected: 0 }
+      ];
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const hour = apptDate.getHours();
+        const status = appt.status;
+
+        if (status === "Approved" || status === "Pending" || status === "Rejected") {
+          let idx = -1;
+          if (hour < 9) idx = 0;
+          else if (hour >= 9 && hour < 12) idx = 1;
+          else if (hour >= 12 && hour < 15) idx = 2;
+          else if (hour >= 15 && hour < 18) idx = 3;
+          else if (hour >= 18 && hour < 21) idx = 4;
+          else if (hour >= 21) idx = 5;
+
+          if (idx !== -1) {
+            groups[idx][status]++;
+          }
+        }
+      });
+      return groups;
+
+    } else if (overviewFilter === "week") {
+      const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const groups = [];
+      
+      // Mon to Sun of the current week
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek.getTime() + i * 24 * 60 * 60 * 1000);
+        groups.push({
+          name: weekdays[d.getDay()],
+          dateStr: d.toDateString(),
+          Approved: 0,
+          Pending: 0,
+          Rejected: 0
+        });
+      }
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const apptDateStr = apptDate.toDateString();
+        const status = appt.status;
+
+        const group = groups.find(g => g.dateStr === apptDateStr);
+        if (group && (status === "Approved" || status === "Pending" || status === "Rejected")) {
+          group[status]++;
+        }
+      });
+      return groups.map(({ name, Approved, Pending, Rejected }) => ({ name, Approved, Pending, Rejected }));
+
+    } else if (overviewFilter === "month") {
+      const lastDay = endOfMonth.getDate();
+      const periods = [
+        { startDay: 1, endDay: 7 },
+        { startDay: 8, endDay: 14 },
+        { startDay: 15, endDay: 21 },
+        { startDay: 22, endDay: lastDay }
+      ];
+
+      const groups = periods.map(p => {
+        const start = new Date(currentYear, currentMonth, p.startDay, 0, 0, 0, 0);
+        const end = new Date(currentYear, currentMonth, p.endDay, 23, 59, 59, 999);
+
+        const startStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const endStr = end.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+        return {
+          name: `${startStr} - ${endStr}`,
+          startTime: start.getTime(),
+          endTime: end.getTime(),
+          Approved: 0,
+          Pending: 0,
+          Rejected: 0
+        };
+      });
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const apptTime = apptDate.getTime();
+        const status = appt.status;
+
+        const group = groups.find(g => apptTime >= g.startTime && apptTime <= g.endTime);
+        if (group && (status === "Approved" || status === "Pending" || status === "Rejected")) {
+          group[status]++;
+        }
+      });
+      return groups.map(({ name, Approved, Pending, Rejected }) => ({ name, Approved, Pending, Rejected }));
+
+    } else if (overviewFilter === "year") {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const groups = monthNames.map((name, idx) => {
+        return {
+          name: `${name} '${currentYear.toString().slice(-2)}`,
+          monthVal: idx,
+          Approved: 0,
+          Pending: 0,
+          Rejected: 0
+        };
+      });
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const apptMonth = apptDate.getMonth();
+        const apptYear = apptDate.getFullYear();
+        const status = appt.status;
+
+        const group = groups.find(m => m.monthVal === apptMonth && apptYear === currentYear);
+        if (group && (status === "Approved" || status === "Pending" || status === "Rejected")) {
+          group[status]++;
+        }
+      });
+      return groups.map(({ name, Approved, Pending, Rejected }) => ({ name, Approved, Pending, Rejected }));
+    }
+
+    return [];
+  }, [allAppointments, overviewFilter]);
+
+  // Reactive computations for Service Type Bookings chart (Pie Chart)
+  const serviceDistributionData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    // Bounds
+    const todayStart = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
+    const todayEnd = new Date(currentYear, currentMonth, currentDate, 23, 59, 59, 999);
+
+    const currentDay = now.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const startOfWeek = new Date(currentYear, currentMonth, currentDate + distanceToMonday, 0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+
+    const startOfMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+    const startOfYear = new Date(currentYear, 0, 1, 0, 0, 0, 0);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+    // Filter appointments by selected date range
+    const filtered = allAppointments.filter(appt => {
+      if (!appt.appointmentDate) return false;
+      const apptDate = new Date(appt.appointmentDate);
+
+      switch (serviceFilter) {
+        case "day":
+          return apptDate >= todayStart && apptDate <= todayEnd;
+        case "week":
+          return apptDate >= startOfWeek && apptDate <= endOfWeek;
+        case "month":
+          return apptDate >= startOfMonth && apptDate <= endOfMonth;
+        case "year":
+          return apptDate >= startOfYear && apptDate <= endOfYear;
+        default:
+          return true;
+      }
+    });
+
+    const serviceGroups = {
+      Normal: 0,
+      High: 0,
+      VIP: 0,
+      VVIP: 0
+    };
+
+    filtered.forEach(appt => {
+      const type = appt.serviceType || "Normal";
+      if (serviceGroups[type] !== undefined) {
+        serviceGroups[type]++;
+      } else {
+        serviceGroups.Normal++;
+      }
+    });
+
+    return [
+      { name: "Normal", value: serviceGroups.Normal, color: "#E0F5F5" },
+      { name: "High", value: serviceGroups.High, color: "#67C4C0" },
+      { name: "VIP", value: serviceGroups.VIP, color: "#F472B6" },
+      { name: "VVIP", value: serviceGroups.VVIP, color: "#EC4899" }
+    ];
+  }, [allAppointments, serviceFilter]);
+
+  const totalServiceBookings = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    // Bounds
+    const todayStart = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
+    const todayEnd = new Date(currentYear, currentMonth, currentDate, 23, 59, 59, 999);
+
+    const currentDay = now.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const startOfWeek = new Date(currentYear, currentMonth, currentDate + distanceToMonday, 0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+
+    const startOfMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+    const startOfYear = new Date(currentYear, 0, 1, 0, 0, 0, 0);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+    const filtered = allAppointments.filter(appt => {
+      if (!appt.appointmentDate) return false;
+      const apptDate = new Date(appt.appointmentDate);
+
+      switch (serviceFilter) {
+        case "day":
+          return apptDate >= todayStart && apptDate <= todayEnd;
+        case "week":
+          return apptDate >= startOfWeek && apptDate <= endOfWeek;
+        case "month":
+          return apptDate >= startOfMonth && apptDate <= endOfMonth;
+        case "year":
+          return apptDate >= startOfYear && apptDate <= endOfYear;
+        default:
+          return true;
+      }
+    });
+
+    return filtered.length;
+  }, [allAppointments, serviceFilter]);
+
+  // Reactive computations for Revenue Trend chart (Area Chart)
+  const revenueTrendData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    // Bounds for Today (Day)
+    const todayStart = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
+    const todayEnd = new Date(currentYear, currentMonth, currentDate, 23, 59, 59, 999);
+
+    // Bounds for This Week (Monday to Sunday)
+    const currentDay = now.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const startOfWeek = new Date(currentYear, currentMonth, currentDate + distanceToMonday, 0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+
+    // Bounds for This Month (1st to last day of month)
+    const startOfMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+    // Bounds for This Year (Jan 1 to Dec 31)
+    const startOfYear = new Date(currentYear, 0, 1, 0, 0, 0, 0);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+    // Filter appointments by selected date range and status === "Approved"
+    const filtered = allAppointments.filter(appt => {
+      if (!appt.appointmentDate || appt.status !== "Approved") return false;
+      const apptDate = new Date(appt.appointmentDate);
+
+      switch (revenueFilter) {
+        case "day":
+          return apptDate >= todayStart && apptDate <= todayEnd;
+        case "week":
+          return apptDate >= startOfWeek && apptDate <= endOfWeek;
+        case "month":
+          return apptDate >= startOfMonth && apptDate <= endOfMonth;
+        case "year":
+          return apptDate >= startOfYear && apptDate <= endOfYear;
+        default:
+          return true;
+      }
+    });
+
+    // Group the filtered appointments and sum revenue
+    if (revenueFilter === "day") {
+      const groups = [
+        { name: "Before 9 AM", Revenue: 0 },
+        { name: "9 AM - 12 PM", Revenue: 0 },
+        { name: "12 PM - 3 PM", Revenue: 0 },
+        { name: "3 PM - 6 PM", Revenue: 0 },
+        { name: "6 PM - 9 PM", Revenue: 0 },
+        { name: "After 9 PM", Revenue: 0 }
+      ];
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const hour = apptDate.getHours();
+        const price = appt.price || 0;
+
+        let idx = -1;
+        if (hour < 9) idx = 0;
+        else if (hour >= 9 && hour < 12) idx = 1;
+        else if (hour >= 12 && hour < 15) idx = 2;
+        else if (hour >= 15 && hour < 18) idx = 3;
+        else if (hour >= 18 && hour < 21) idx = 4;
+        else if (hour >= 21) idx = 5;
+
+        if (idx !== -1) {
+          groups[idx].Revenue += price;
+        }
+      });
+      return groups;
+
+    } else if (revenueFilter === "week") {
+      const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const groups = [];
+      
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek.getTime() + i * 24 * 60 * 60 * 1000);
+        groups.push({
+          name: weekdays[d.getDay()],
+          dateStr: d.toDateString(),
+          Revenue: 0
+        });
+      }
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const apptDateStr = apptDate.toDateString();
+        const price = appt.price || 0;
+
+        const group = groups.find(g => g.dateStr === apptDateStr);
+        if (group) {
+          group.Revenue += price;
+        }
+      });
+      return groups.map(({ name, Revenue }) => ({ name, Revenue }));
+
+    } else if (revenueFilter === "month") {
+      const lastDay = endOfMonth.getDate();
+      const periods = [
+        { startDay: 1, endDay: 7 },
+        { startDay: 8, endDay: 14 },
+        { startDay: 15, endDay: 21 },
+        { startDay: 22, endDay: lastDay }
+      ];
+
+      const groups = periods.map(p => {
+        const start = new Date(currentYear, currentMonth, p.startDay, 0, 0, 0, 0);
+        const end = new Date(currentYear, currentMonth, p.endDay, 23, 59, 59, 999);
+
+        const startStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const endStr = end.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+        return {
+          name: `${startStr} - ${endStr}`,
+          startTime: start.getTime(),
+          endTime: end.getTime(),
+          Revenue: 0
+        };
+      });
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const apptTime = apptDate.getTime();
+        const price = appt.price || 0;
+
+        const group = groups.find(g => apptTime >= g.startTime && apptTime <= g.endTime);
+        if (group) {
+          group.Revenue += price;
+        }
+      });
+      return groups.map(({ name, Revenue }) => ({ name, Revenue }));
+
+    } else if (revenueFilter === "year") {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const groups = monthNames.map((name, idx) => {
+        return {
+          name: `${name} '${currentYear.toString().slice(-2)}`,
+          monthVal: idx,
+          Revenue: 0
+        };
+      });
+
+      filtered.forEach(appt => {
+        const apptDate = new Date(appt.appointmentDate);
+        const apptMonth = apptDate.getMonth();
+        const apptYear = apptDate.getFullYear();
+        const price = appt.price || 0;
+
+        const group = groups.find(m => m.monthVal === apptMonth && apptYear === currentYear);
+        if (group) {
+          group.Revenue += price;
+        }
+      });
+      return groups.map(({ name, Revenue }) => ({ name, Revenue }));
+    }
+
+    return [];
+  }, [allAppointments, revenueFilter]);
+
+  // Reactive computations for Popular Categories chart (Horizontal Bar Chart)
+  const categoryDistributionData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    // Bounds
+    const todayStart = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
+    const todayEnd = new Date(currentYear, currentMonth, currentDate, 23, 59, 59, 999);
+
+    const currentDay = now.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const startOfWeek = new Date(currentYear, currentMonth, currentDate + distanceToMonday, 0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+
+    const startOfMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+    const startOfYear = new Date(currentYear, 0, 1, 0, 0, 0, 0);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+    // Filter appointments by selected date range
+    const filtered = allAppointments.filter(appt => {
+      if (!appt.appointmentDate) return false;
+      const apptDate = new Date(appt.appointmentDate);
+
+      switch (categoryFilter) {
+        case "day":
+          return apptDate >= todayStart && apptDate <= todayEnd;
+        case "week":
+          return apptDate >= startOfWeek && apptDate <= endOfWeek;
+        case "month":
+          return apptDate >= startOfMonth && apptDate <= endOfMonth;
+        case "year":
+          return apptDate >= startOfYear && apptDate <= endOfYear;
+        default:
+          return true;
+      }
+    });
+
+    const categoryCounts = {};
+
+    filtered.forEach(appt => {
+      const catName = appt.category?.name || "Uncategorized";
+      categoryCounts[catName] = (categoryCounts[catName] || 0) + 1;
+    });
+
+    // Color palette for popular categories
+    const colors = ["#67C4C0", "#F472B6", "#A78BFA", "#3B82F6", "#F59E0B", "#10B981"];
+
+    const sortedData = Object.keys(categoryCounts).map((key, idx) => ({
+      name: key,
+      value: categoryCounts[key],
+      color: colors[idx % colors.length]
+    })).sort((a, b) => b.value - a.value);
+
+    // Keep top 5 popular categories
+    return sortedData.slice(0, 5);
+  }, [allAppointments, categoryFilter]);
 
   const fetchPendingAppointments = useCallback(async () => {
     setPendingTableLoading(true);
@@ -452,9 +904,27 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4">
         {/* Appointments Overview Bar Chart */}
         <div className="rounded-xl p-6 flex flex-col gap-4" style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }}>
-          <div>
-            <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>Appointments Overview</h3>
-            <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>Last 7 days system metrics</p>
+          <div className="flex items-center justify-between select-none">
+            <div>
+              <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>Appointments Overview</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                {overviewFilter === "day" && "Today's system metrics"}
+                {overviewFilter === "week" && "Last 7 days system metrics"}
+                {overviewFilter === "month" && "Last 30 days system metrics"}
+                {overviewFilter === "year" && "Last 12 months system metrics"}
+              </p>
+            </div>
+            <select
+              value={overviewFilter}
+              onChange={(e) => setOverviewFilter(e.target.value)}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#F9D0E8] focus:outline-none focus:ring-1 focus:ring-[#F472B6] cursor-pointer transition-all"
+              style={{ color: "var(--text)", borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+            >
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
           </div>
           <div className="w-full h-60">
             <ResponsiveContainer width="100%" height="100%">
@@ -476,9 +946,27 @@ export const Dashboard = () => {
 
         {/* Service Type Donut Pie Chart */}
         <div className="rounded-xl p-6 flex flex-col justify-between" style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }}>
-          <div>
-            <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>Service Type Bookings</h3>
-            <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>Tiered bookings share</p>
+          <div className="flex items-center justify-between select-none">
+            <div>
+              <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>Service Type Bookings</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                {serviceFilter === "day" && "Today's bookings share"}
+                {serviceFilter === "week" && "Last 7 days bookings share"}
+                {serviceFilter === "month" && "Last 30 days bookings share"}
+                {serviceFilter === "year" && "Last 12 months bookings share"}
+              </p>
+            </div>
+            <select
+              value={serviceFilter}
+              onChange={(e) => setServiceFilter(e.target.value)}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#F9D0E8] focus:outline-none focus:ring-1 focus:ring-[#F472B6] cursor-pointer transition-all"
+              style={{ color: "var(--text)", borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+            >
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
           </div>
           
           <div className="flex flex-col sm:flex-row items-center justify-around gap-6 h-60">
@@ -516,6 +1004,103 @@ export const Dashboard = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Second Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4">
+        {/* Revenue Growth Area Chart */}
+        <div className="rounded-xl p-6 flex flex-col gap-4" style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }}>
+          <div className="flex items-center justify-between select-none">
+            <div>
+              <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>Revenue Growth</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                {revenueFilter === "day" && "Today's total earnings"}
+                {revenueFilter === "week" && "Last 7 days total earnings"}
+                {revenueFilter === "month" && "Last 30 days total earnings"}
+                {revenueFilter === "year" && "Last 12 months total earnings"}
+              </p>
+            </div>
+            <select
+              value={revenueFilter}
+              onChange={(e) => setRevenueFilter(e.target.value)}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#F9D0E8] focus:outline-none focus:ring-1 focus:ring-[#F472B6] cursor-pointer transition-all"
+              style={{ color: "var(--text)", borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+            >
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
+          </div>
+          <div className="w-full h-60">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenueTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--teal)" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="var(--teal)" stopOpacity={0.0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="name" stroke="var(--hint)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--hint)" fontSize={11} tickLine={false} tickFormatter={(val) => `₹${val.toLocaleString()}`} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "var(--card)", borderRadius: "10px", borderColor: "var(--border)", color: "var(--text)" }}
+                  labelStyle={{ fontWeight: "bold", color: "var(--text)" }}
+                  formatter={(value) => [`₹${value.toLocaleString()}`, "Revenue"]}
+                />
+                <Area type="monotone" dataKey="Revenue" stroke="var(--teal)" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Popular Categories Horizontal Bar Chart */}
+        <div className="rounded-xl p-6 flex flex-col gap-4" style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }}>
+          <div className="flex items-center justify-between select-none">
+            <div>
+              <h3 className="text-base font-semibold" style={{ color: "var(--text)" }}>Popular Categories</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                {categoryFilter === "day" && "Today's booking volume"}
+                {categoryFilter === "week" && "Last 7 days booking volume"}
+                {categoryFilter === "month" && "Last 30 days booking volume"}
+                {categoryFilter === "year" && "Last 12 months booking volume"}
+              </p>
+            </div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#F9D0E8] focus:outline-none focus:ring-1 focus:ring-[#F472B6] cursor-pointer transition-all"
+              style={{ color: "var(--text)", borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+            >
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
+          </div>
+          <div className="w-full h-60">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={categoryDistributionData}
+                layout="vertical"
+                margin={{ top: 10, right: 10, left: 30, bottom: 0 }}
+              >
+                <XAxis type="number" stroke="var(--hint)" fontSize={11} tickLine={false} allowDecimals={false} />
+                <YAxis type="category" dataKey="name" stroke="var(--hint)" fontSize={10} tickLine={false} width={100} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "var(--card)", borderRadius: "10px", borderColor: "var(--border)", color: "var(--text)" }}
+                  labelStyle={{ fontWeight: "bold", color: "var(--text)" }}
+                  formatter={(value) => [value, "Bookings"]}
+                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
+                  {categoryDistributionData.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
