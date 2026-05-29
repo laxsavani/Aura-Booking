@@ -333,7 +333,7 @@ export const Banners = () => {
                 className="bg-white border border-[#F9D0E8] rounded-card overflow-hidden shadow-card relative group flex flex-col justify-between"
               >
                 {/* Visual Image Section */}
-                <div className="aspect-video w-full bg-slate-100 relative overflow-hidden select-none">
+                <div className="aspect-[1.8] w-full bg-slate-100 relative overflow-hidden select-none">
                   <img
                     src={banner.image}
                     alt={banner.title || "Promotional banner"}
@@ -467,12 +467,17 @@ export const Banners = () => {
                 <form className="flex flex-col gap-4" onSubmit={handleSaveBanner}>
                   {/* Banner Image Drag zone */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-[#6B6B8A] px-0.5">
-                      Banner Graphic (16:9) <span className="text-[#EC4899] font-bold">*</span>
-                    </label>
+                    <div className="flex justify-between items-center px-0.5">
+                      <label className="text-xs font-semibold text-[#6B6B8A]">
+                        Banner Graphic <span className="text-[#EC4899] font-bold">*</span>
+                      </label>
+                      <span className="text-[10px] font-bold text-[#3FA8A4] bg-[#E0F5F5] px-2 py-0.5 rounded-pill">
+                        1080 x 600 px (1.8:1)
+                      </span>
+                    </div>
 
                     {formImagePreview ? (
-                      <div className="relative w-full aspect-video rounded-card overflow-hidden border border-[#F9D0E8] select-none shadow-sm">
+                      <div className="relative w-full aspect-[1.8] rounded-card overflow-hidden border border-[#F9D0E8] select-none shadow-sm">
                         <img src={formImagePreview} alt="Preview" className="w-full h-full object-cover" />
                         <button
                           type="button"
@@ -488,7 +493,7 @@ export const Banners = () => {
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className={`w-full aspect-video rounded-card border-2 border-dashed border-[#F9D0E8] hover:border-[#F472B6] hover:bg-[#FDF2F8]/40 transition-all duration-150 flex flex-col items-center justify-center gap-2 cursor-pointer p-4 text-center ${
+                        className={`w-full aspect-[1.8] rounded-card border-2 border-dashed border-[#F9D0E8] hover:border-[#F472B6] hover:bg-[#FDF2F8]/40 transition-all duration-150 flex flex-col items-center justify-center gap-2 cursor-pointer p-4 text-center ${
                           formErrors.photo ? "border-[#EC4899] bg-[#FCE7F3]/10" : ""
                         }`}
                       >
@@ -498,7 +503,7 @@ export const Banners = () => {
                             Drag & drop or click to upload banner image
                           </span>
                           <span className="text-[9px] text-[#A8A8C0]">
-                            JPG, PNG, WEBP up to 5MB (Recom: 16:9 ratio)
+                            Upload only 1080 x 600 px images
                           </span>
                         </div>
                         {formErrors.photo && (
