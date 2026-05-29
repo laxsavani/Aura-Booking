@@ -16,6 +16,7 @@ const storage = new CloudinaryStorage({
         if (file.fieldname === "photo") folder = "spa-management/services";
         if (file.fieldname === "profileImage") folder = "spa-management/profiles";
         if (file.fieldname === "faceScreenshot") folder = "spa-management/faces";
+        if (file.fieldname === "banner") folder = "banner";
 
         return {
             folder,

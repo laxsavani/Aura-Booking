@@ -17,6 +17,7 @@ import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
+import Banners from "./pages/Banners";
 
 // Page Wrapper for consistent entry animations
 export const PageWrapper = ({ children }) => {
@@ -144,6 +145,14 @@ const AnimatedRoutes = () => {
             element={
               <PageWrapper>
                 <Settings />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="banners"
+            element={
+              <PageWrapper>
+                <Banners />
               </PageWrapper>
             }
           />

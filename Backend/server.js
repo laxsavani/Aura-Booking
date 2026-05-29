@@ -50,6 +50,7 @@ app.use("/api/appointments", require("./routes/appointment.routes"));
 app.use("/api/notifications", require("./routes/notification.routes"));
 app.use("/api/profile", require("./routes/profile.routes"));
 app.use("/api/admin", require("./routes/admin.routes"));
+app.use("/api/banners", require("./routes/banner.routes"));
 
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });

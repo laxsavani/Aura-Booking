@@ -78,9 +78,22 @@ const appointmentSchema = new mongoose.Schema(
 );
 
 // Auto-generate order number before save
-appointmentSchema.pre("save", function () {
+appointmentSchema.pre("save", async function () {
     if (!this.orderNumber) {
-        this.orderNumber = "SPA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+        const lastAppointment = await this.constructor.findOne().sort({ createdAt: -1 });
+        let nextNumber = 1;
+
+        if (lastAppointment && lastAppointment.orderNumber) {
+            const parts = lastAppointment.orderNumber.split("-");
+            if (parts.length >= 3) {
+                const parsed = parseInt(parts[2], 10);
+                if (!isNaN(parsed)) {
+                    nextNumber = parsed + 1;
+                }
+            }
+        }
+
+        this.orderNumber = `AURA-${Date.now()}-${String(nextNumber).padStart(4, "0")}`;
     }
 });
 

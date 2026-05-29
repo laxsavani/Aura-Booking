@@ -11,7 +11,8 @@ import {
   LogOut,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Image
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCustomizer } from "../../context/CustomizerContext";
@@ -49,6 +50,7 @@ export const Sidebar = ({ isMobileOpen, toggleSidebar }) => {
     { path: "/services", label: "Services", icon: Sparkles },
     { path: "/categories", label: "Categories", icon: Tag },
     { path: "/users", label: "Users", icon: Users },
+    { path: "/banners", label: "Banners", icon: Image },
     { path: "/notifications", label: "Notifications", icon: Bell }
   ];
 
