@@ -11,7 +11,7 @@ export const Login = () => {
   const { login } = useAuth();
   const { addToast } = useToast();
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +20,7 @@ export const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!identifier || !password) {
       setErrorMsg("Please fill in all credentials.");
       triggerShake();
       return;
@@ -30,7 +30,7 @@ export const Login = () => {
     setErrorMsg("");
 
     try {
-      const res = await api.post("/auth/login", { email, password });
+      const res = await api.post("/auth/login", { identifier, password });
       
       if (res.data?.success) {
         const { token, user } = res.data.data;
@@ -110,21 +110,21 @@ export const Login = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-6">
-          {/* Email input */}
+          {/* Mobile Or Email input */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-[#6B6B8A] px-1">
-              Email Address <span className="text-[#EC4899] font-bold">*</span>
+              Mobile Or Email <span className="text-[#EC4899] font-bold">*</span>
             </label>
             <div className="relative h-12">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F472B6]">
                 <Mail className="w-4.5 h-4.5" />
               </div>
               <input
-                type="email"
+                type="identifier"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@aurabooking.com"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="admin@aurabooking.com / 1234567890"
                 className="w-full h-full pl-11 pr-4 bg-white border border-[#F9D0E8] rounded-btn text-sm text-[#1A1A2E] placeholder-[#A8A8C0] focus:border-[#F472B6] focus:outline-none focus:ring-4 focus:ring-[#F472B6]/15 transition-all duration-150"
               />
             </div>
