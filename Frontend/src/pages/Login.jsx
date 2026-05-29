@@ -124,6 +124,7 @@ export const Login = () => {
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
+                autoComplete="username"
                 placeholder="admin@aurabooking.com / 1234567890"
                 className="w-full h-full pl-11 pr-4 bg-white border border-[#F9D0E8] rounded-btn text-sm text-[#1A1A2E] placeholder-[#A8A8C0] focus:border-[#F472B6] focus:outline-none focus:ring-4 focus:ring-[#F472B6]/15 transition-all duration-150"
               />
@@ -144,6 +145,7 @@ export const Login = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 placeholder="••••••••"
                 className="w-full h-full pl-11 pr-11 bg-white border border-[#F9D0E8] rounded-btn text-sm text-[#1A1A2E] placeholder-[#A8A8C0] focus:border-[#F472B6] focus:outline-none focus:ring-4 focus:ring-[#F472B6]/15 transition-all duration-150"
               />

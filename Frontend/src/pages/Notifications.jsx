@@ -143,7 +143,8 @@ export const Notifications = () => {
         await handleMarkOneRead(notif._id);
       }
       if (notif.appointment) {
-        navigate(`/appointments/${notif.appointment}`);
+        const apptId = notif.appointment._id || notif.appointment;
+        navigate(`/appointments/${apptId}`);
       }
     } catch (err) {
       console.error(err);
@@ -336,14 +337,14 @@ export const Notifications = () => {
                         )}
                       </div>
                       <p className="text-xs text-[#6B6B8A] leading-relaxed">
-                        {notif.message}
+                        {notif.body || notif.message}
                       </p>
                       
                       {/* Meta information tags */}
                       {notif.appointment && (
                         <div className="flex items-center gap-1.5 mt-2 flex-wrap text-[10px] text-[#A8A8C0] font-semibold uppercase tracking-wider">
                           <span className="text-[#F472B6] font-bold font-mono">
-                            {notif.message.includes("SPA-") ? "" : `#SPA-${notif.appointment.slice(-4).toUpperCase()}`}
+                            {(notif.body || notif.message || "").includes("SPA-") ? "" : `#SPA-${(notif.appointment._id || notif.appointment || "").slice(-4).toUpperCase()}`}
                           </span>
                           <span>·</span>
                           <span>Client Request Audit</span>

@@ -93,7 +93,7 @@ export const StatCard = ({
 
       {/* Sparkline Wave Chart - Zenith style */}
       <div className="w-full h-10 mt-3 -mb-1 overflow-hidden opacity-75">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <AreaChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id={`gradient-${label.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">

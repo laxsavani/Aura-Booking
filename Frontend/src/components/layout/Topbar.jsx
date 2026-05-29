@@ -260,13 +260,14 @@ export const Topbar = ({ toggleSidebar, onOpenCustomizer }) => {
                       notifications.slice(0, 5).map((notif) => {
                         let icon = <Clock className="w-4 h-4" style={{ color: "var(--primary)" }} />;
                         let iconBgColor = "var(--primary-xlight)";
-                        if (notif.title.toLowerCase().includes("approve")) {
+                        const titleLower = (notif.title || "").toLowerCase();
+                        if (titleLower.includes("approve")) {
                           icon = <CheckCircle2 className="w-4 h-4" style={{ color: "var(--teal)" }} />;
                           iconBgColor = "var(--teal-light)";
-                        } else if (notif.title.toLowerCase().includes("reject")) {
+                        } else if (titleLower.includes("reject")) {
                           icon = <XCircle className="w-4 h-4" style={{ color: "var(--primary-dark)" }} />;
                           iconBgColor = "var(--primary-light)";
-                        } else if (notif.title.toLowerCase().includes("cancel")) {
+                        } else if (titleLower.includes("cancel")) {
                           icon = <Ban className="w-4 h-4" style={mutedColor} />;
                           iconBgColor = "var(--border-light)";
                         }
@@ -293,7 +294,7 @@ export const Topbar = ({ toggleSidebar, onOpenCustomizer }) => {
                                 {notif.title}
                               </span>
                               <span className="text-[10px] leading-normal line-clamp-2" style={mutedColor}>
-                                {notif.message}
+                                {notif.body || notif.message}
                               </span>
                             </div>
                             {!notif.isRead && (
